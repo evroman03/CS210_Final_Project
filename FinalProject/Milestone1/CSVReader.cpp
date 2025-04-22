@@ -21,10 +21,9 @@ int CSVReader::getPopulation(const std::string& cityName, const std::string& cou
         std::stringstream ss(line);
         std::string city, code, populationStr;
 
-        std::getline(ss, city, ',');
         std::getline(ss, code, ',');
+        std::getline(ss, city, ',');
         std::getline(ss, populationStr, ',');
-
         if (city == cityName && code == countryCode) 
         {
             return std::stoi(populationStr); // "string to integer" 
