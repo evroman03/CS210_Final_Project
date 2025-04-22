@@ -21,9 +21,15 @@
     <ClCompile Include="CSVReader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LRU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CSVReader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LRU.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
