@@ -6,14 +6,15 @@ void LFUCache<Key, Value>::put(const Key& key, const Value& value)
 {
     if (CacheBase<Key, Value>::CAPACITY == 0)
     {
-        cout << "Non-zero capacity required to input something"
+        std::cout << "Non-zero capacity required to input something";
         return;
     }
 
     //update value and return early if found
-    if (get(key)) 
+    Value* existing = get(key);
+    if (existing)
     {
-        dataCache[key].value = value;
+        *existing = value; // update the value directly
         return;
     }
 

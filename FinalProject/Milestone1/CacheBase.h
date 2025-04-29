@@ -13,7 +13,7 @@ public:
     //=0 marks this as a pure virtual function - it MUST be overridden in inherited classes
     virtual void put(const Key& key, const Value& value) = 0;
 
-    virtual bool get(const Key& key, Value& value) = 0;
+    virtual Value* get(const Key& key) = 0;
 
     //shared capacity for all caches
     static const int CAPACITY = 10; 

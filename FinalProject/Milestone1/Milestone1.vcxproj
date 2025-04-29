@@ -132,6 +132,7 @@
     <ClCompile Include="LFU.cpp" />
     <ClCompile Include="LRU.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="RandomCache.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CacheBase.h" />
@@ -139,6 +140,7 @@
     <ClInclude Include="FIFOCache.h" />
     <ClInclude Include="LFU.h" />
     <ClInclude Include="LRU.h" />
+    <ClInclude Include="RandomCache.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
