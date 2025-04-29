@@ -24,13 +24,22 @@
     <ClCompile Include="LRU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LFU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CacheBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LFU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="CSVReader.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LRU.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
