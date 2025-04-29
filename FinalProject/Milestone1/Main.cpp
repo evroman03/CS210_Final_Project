@@ -4,6 +4,7 @@
 #include "FIFOCache.h"
 #include "RandomCache.h"
 #include <memory>
+#include <limits>
 
 using namespace std;
 
@@ -18,7 +19,12 @@ int main()
     cout << "2. FIFO (First-In, First-Out)\n";
     cout << "3. Random Replacement\n";
     cout << "Enter your choice: ";
-    cin >> strategyChoice;
+    while (!(cin >> strategyChoice) || strategyChoice < 1 || strategyChoice > 3)
+    {
+        cout << "Invalid choice. Please enter 1, 2, or 3: ";
+        cin.clear(); // clear the error flags
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // discard invalid input
+    }
     cin.ignore();
 
     unique_ptr<CacheBase<string, string>> cache;
@@ -50,7 +56,12 @@ int main()
         cout << "3. Exit\n";
         cout << "Enter your choice: ";
 
-        cin >> choice;
+        while (!(cin >> choice) || choice < 1 || choice > 3)
+        {
+            cout << "Invalid choice. Please enter 1, 2, or 3: ";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
         cin.ignore();
 
         switch (choice)
