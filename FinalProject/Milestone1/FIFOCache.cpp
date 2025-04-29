@@ -23,3 +23,15 @@ void FIFOCache<Key, Value>::put(const Key& key, const Value& value)
 	//add the new term to our fifo
 	order.push(key);
 }
+
+//Do not consider access frequency, only insertion order matters.
+template<typename Key, typename Value>
+Value* FIFOCache<Key, Value>::get(const Key& key)
+{
+	auto it = cache.find(key);
+	if (it == cache.end())
+	{
+		return nullptr;
+	}
+	return &it->second;
+}
