@@ -128,6 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CSVReader.cpp" />
+    <ClCompile Include="FIFOCache.cpp" />
     <ClCompile Include="LFU.cpp" />
     <ClCompile Include="LRU.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -135,6 +136,7 @@
   <ItemGroup>
     <ClInclude Include="CacheBase.h" />
     <ClInclude Include="CSVReader.h" />
+    <ClInclude Include="FIFOCache.h" />
     <ClInclude Include="LFU.h" />
     <ClInclude Include="LRU.h" />
   </ItemGroup>
