@@ -14,7 +14,7 @@ public:
     Value* get(const Key& key) override;
 
 private:
-    std::unordered_map<Key, Value> cache;
+    std::unordered_map<Key, Value> dataCache;
     //this will keep track of which entry was queried 10 searches ago to evict upon full
     std::queue<Key> order;
 };

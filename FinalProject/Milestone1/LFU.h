@@ -23,7 +23,7 @@ private:
     };
 
     //our hashmap using the cache entry. Every time an entry is used, its freq goes up
-    std::unordered_map<Key, CacheEntry> cache;
+    std::unordered_map<Key, CacheEntry> dataCache;
     //This is a "frequency list" that tracks the accesses/frequency of least used keys
     //When we access a value with a key, the key is moved from the [nth] bucket to the [n+1] bucket
     std::unordered_map<int, std::list<Key>> freqMap;
