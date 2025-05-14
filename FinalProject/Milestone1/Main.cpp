@@ -1,129 +1,167 @@
 #include <iostream>
-#include "CSVReader.h"
+#include <fstream>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <chrono>
+#include <memory>
+#include <random>
+#include <unordered_set>
+#include <algorithm>
+
+#include "CacheBase.h"
 #include "LFU.h"
 #include "FIFOCache.h"
 #include "RandomCache.h"
-#include <memory>
-#include <limits>
 
-using namespace std;
+struct CityData {
+    std::string name;
+    std::string country;
+    int population;
+
+    friend std::ostream& operator<<(std::ostream& os, const CityData& data) {
+        os << data.name << ", " << data.country << " (pop: " << data.population << ")";
+        return os;
+    }
+};
+
+std::vector<CityData> loadCities(const std::string& filename) {
+    std::vector<CityData> cities;
+    std::ifstream file(filename);
+    std::string line;
+    std::getline(file, line);
+
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string country, name, popStr;
+
+        std::getline(ss, country, ',');
+        std::getline(ss, name, ',');
+        std::getline(ss, popStr, ',');
+
+        CityData city = {
+            name,
+            country,
+            std::stoi(popStr)
+        };
+        cities.push_back(city);
+    }
+
+    return cities;
+}
+
+enum class CacheType {
+    LFU,
+    FIFO,
+    RANDOM
+};
+
+std::unique_ptr<CacheBase<std::string, CityData>> createCache(CacheType type, size_t capacity) {
+    switch (type) {
+    case CacheType::LFU:
+        return std::make_unique<LFUCache<std::string, CityData>>(capacity);
+    case CacheType::FIFO:
+        return std::make_unique<FIFOCache<std::string, CityData>>(capacity);
+    case CacheType::RANDOM:
+        return std::make_unique<RandomCache<std::string, CityData>>(capacity);
+    default:
+        throw std::runtime_error("Invalid cache type");
+    }
+}
+
+std::vector<CityData> generateLookupPool(const std::vector<CityData>& allCities, int hotCityCount, int hotCityDuplicates) {
+    std::vector<CityData> pool;
+    std::default_random_engine engine(std::random_device{}());
+    std::uniform_int_distribution<size_t> dist(0, allCities.size() - 1);
+
+    std::unordered_set<std::string> usedNames;
+    std::vector<CityData> hotCities;
+    while (hotCities.size() < static_cast<size_t>(hotCityCount)) 
+    {
+        const CityData& candidate = allCities[dist(engine)];
+        if (usedNames.insert(candidate.name).second)
+        {
+            hotCities.push_back(candidate);
+        }
+    }
+
+    for (int i = 0; i < 1000; ++i)
+    {
+        pool.push_back(allCities[dist(engine)]);
+    }
+
+    for (const auto& hot : hotCities) 
+    {
+        for (int i = 0; i < hotCityDuplicates; ++i) {
+            pool.push_back(hot);
+        }
+    }
+
+    // Shuffle the full workload
+    std::shuffle(pool.begin(), pool.end(), engine);
+    return pool;
+}
 
 int main()
 {
-    int strategyChoice;
-    string csvPath = "world_cities.csv";
-    string cityName, countryCode;
+    const std::string filename = "world_cities.csv";
+    const size_t cacheSize = 10;
+    const int hotCityCount = 10;         // Number of hot cities
+    const int hotCityDuplicates = 100;    // Times each hot city is duplicated
 
-    cout << "Select a caching strategy:\n";
-    cout << "1. LFU (Least Frequently Used)\n";
-    cout << "2. FIFO (First-In, First-Out)\n";
-    cout << "3. Random Replacement\n";
-    cout << "Enter your choice: ";
-    while (!(cin >> strategyChoice) || strategyChoice < 1 || strategyChoice > 3)
+    std::vector<CityData> cities = loadCities(filename);
+    if (cities.empty()) 
     {
-        cout << "Invalid choice. Please enter 1, 2, or 3: ";
-        cin.clear(); // clear the error flags
-        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // discard invalid input
-    }
-    cin.ignore();
-
-    unique_ptr<CacheBase<string, string>> cache;
-
-    switch (strategyChoice)
-    {
-    case 1:
-        cache = make_unique<LFUCache<string, string>>();
-        break;
-    case 2:
-        cache = make_unique<FIFOCache<string, string>>();
-        break;
-    case 3:
-        cache = make_unique<RandomCache<string, string>>();
-        break;
-    default:
-        cout << "Invalid choice. Defaulting to LFU.\n";
-        cache = make_unique<LFUCache<string, string>>();
+        std::cerr << "Failed to load cities.\n";
+        return 1;
     }
 
-    CSVReader reader(csvPath);
+    std::vector<CityData> lookupPool = generateLookupPool(cities, hotCityCount, hotCityDuplicates);
 
-    while (true)
+    for (CacheType type : {CacheType::LFU, CacheType::FIFO, CacheType::RANDOM}) 
     {
-        int choice;
-        cout << "\nCountry Management Menu\n";
-        cout << "1. Load a different CSV File\n";
-        cout << "2. Find a city\n";
-        cout << "3. Exit\n";
-        cout << "Enter your choice: ";
+        auto cache = createCache(type, cacheSize);
 
-        while (!(cin >> choice) || choice < 1 || choice > 3)
-        {
-            cout << "Invalid choice. Please enter 1, 2, or 3: ";
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        }
-        cin.ignore();
-
-        switch (choice)
-        {
-        case 1:
-        {
-            cout << "Currently using CSV file: " << csvPath << endl;
-            cout << "Would you like to use a new CSV file? (y/n): ";
-            string response;
-            getline(cin, response);
-
-            if (response == "y")
-            {
-                cout << "Enter new CSV file path: ";
-                getline(cin, csvPath);
-                reader = CSVReader(csvPath);
-                cout << "CSV file updated to: " << csvPath << endl;
-            }
-            break;
+        std::cout << "\nTesting cache type: ";
+        switch (type) {
+        case CacheType::LFU: std::cout << "LFU\n"; break;
+        case CacheType::FIFO: std::cout << "FIFO\n"; break;
+        case CacheType::RANDOM: std::cout << "Random\n"; break;
         }
 
-        case 2:
+        size_t hits = 0;
+        size_t misses = 0;
+        double totalTimeNs = 0;
+
+        for (const auto& city : lookupPool) 
         {
-            cout << "Enter country code: ";
-            getline(cin, countryCode);
-            cout << "Enter city name: ";
-            getline(cin, cityName);
+            const std::string& key = city.name;
 
-            string key = countryCode + "," + cityName;
-            string* result = cache->get(key);
-            string population = result ? *result : "Not Found";
+            auto start = std::chrono::high_resolution_clock::now();
+            CityData* cached = cache->get(key);
+            auto end = std::chrono::high_resolution_clock::now();
 
-            if (population != "Not Found")
-            {
-                cout << "Population (from cache): " << population << endl;
+            if (cached) {
+                ++hits;
             }
             else
             {
-                int pop = reader.getPopulation(cityName, countryCode);
-                if (pop != -1)
-                {
-                    population = to_string(pop);
-                    cache->put(key, population);
-                    cout << "Population (from file): " << population << endl;
-                }
-                else
-                {
-                    cout << "City not found in the CSV file." << endl;
-                }
+                ++misses;
+                cache->put(key, city);
             }
-            break;
+
+            totalTimeNs += std::chrono::duration<double, std::nano>(end - start).count();
         }
 
-        case 3:
-            cout << "Exiting program.\n";
-            return 0;
+        double avgLookupTimeUs = totalTimeNs / lookupPool.size() / 1000.0;
 
-        default:
-            cout << "Invalid choice. Please try again.\n";
-        }
+        std::cout << "Total lookups: " << lookupPool.size() << "\n";
+        std::cout << "Cache size: " << cacheSize << "\n";
+        std::cout << "Hot cities: " << hotCityCount << ", each duplicated " << hotCityDuplicates << " times\n";
+        std::cout << "Hits: " << hits << "\n";
+        std::cout << "Misses: " << misses << "\n";
+        std::cout << "Average lookup time: " << avgLookupTimeUs << " µs\n";
     }
 
     return 0;
 }
-

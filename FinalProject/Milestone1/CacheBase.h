@@ -15,6 +15,5 @@ public:
 
     virtual Value* get(const Key& key) = 0;
 
-    //shared capacity for all caches
-    static const int CAPACITY = 10; 
+    size_t capacity = 100; // default fallback
 };
